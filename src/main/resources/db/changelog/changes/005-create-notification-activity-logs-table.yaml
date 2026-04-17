@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-notification-activity-logs-table
+      author: notification-service
+      changes:
+        - createTable:
+            tableName: notification_activity_logs
+            columns:
+              - column:
+                  name: activity_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: notification_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: notification_activity_logs
+            baseColumnNames: notification_id
+            referencedTableName: notifications
+            referencedColumnNames: notification_id
+            constraintName: fk_activity_logs_notification
+            onDelete: CASCADE
+        - createIndex:
+            indexName: idx_activity_logs_notification_id
+            tableName: notification_activity_logs
+            columns:
+              - column:
+                  name: notification_id

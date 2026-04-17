@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-notification-templates-table
+      author: notification-service
+      changes:
+        - createTable:
+            tableName: notification_templates
+            columns:
+              - column:
+                  name: template_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: title_template
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_template
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+        - createIndex:
+            indexName: idx_templates_event_type
+            tableName: notification_templates
+            columns:
+              - column:
+                  name: event_type

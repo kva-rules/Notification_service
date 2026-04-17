@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-notifications-table
+      author: notification-service
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column:
+                  name: notification_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reference_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reference_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_notifications_type
+            tableName: notifications
+            columns:
+              - column:
+                  name: type
+        - createIndex:
+            indexName: idx_notifications_status
+            tableName: notifications
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_notifications_created_at
+            tableName: notifications
+            columns:
+              - column:
+                  name: created_at
+                  descending: true

@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-notification-recipients-table
+      author: notification-service
+      changes:
+        - createTable:
+            tableName: notification_recipients
+            columns:
+              - column:
+                  name: recipient_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: notification_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_read
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivered_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: read_at
+                  type: timestamp
+        - addForeignKeyConstraint:
+            baseTableName: notification_recipients
+            baseColumnNames: notification_id
+            referencedTableName: notifications
+            referencedColumnNames: notification_id
+            constraintName: fk_recipients_notification
+            onDelete: CASCADE
+        - createIndex:
+            indexName: idx_recipients_user_id
+            tableName: notification_recipients
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_recipients_user_unread
+            tableName: notification_recipients
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: is_read
+        - createIndex:
+            indexName: idx_recipients_delivered_at
+            tableName: notification_recipients
+            columns:
+              - column:
+                  name: delivered_at
+                  descending: true
