@@ -29,8 +29,11 @@ kafka:
   topics:
     notification-events: notification-events-test
 
-jwt:
-  secret: test-secret-key-that-is-at-least-32-characters-long-for-testing
+app:
+  jwt:
+    secret: test-secret-key-that-is-at-least-32-characters-long-for-testing
+  email:
+    enabled: false
 
 logging:
   level:

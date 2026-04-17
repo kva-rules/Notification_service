@@ -8,12 +8,17 @@ import com.cognizant.notificationservice.application.service.NotificationService
 import com.cognizant.notificationservice.application.service.NotificationTemplateService;
 import com.cognizant.notificationservice.domain.enums.NotificationType;
 import com.cognizant.notificationservice.domain.exception.TemplateNotFoundException;
+import com.library.common.event.TicketCreatedEvent;
+import com.library.common.event.SolutionApprovedEvent;
+import com.library.common.event.RewardAddedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -25,7 +30,77 @@ public class NotificationEventConsumer {
     private final NotificationEventProducer eventProducer;
 
     @KafkaListener(topics = "ticket.created", groupId = "${spring.kafka.consumer.group-id}")
-    public void consumeTicketCreated(NotificationEvent event) {
+    public void consumeTicketCreated(TicketCreatedEvent event) {
+        log.info("Received ticket.created event for ticket: {}", event.getTicketId());
+        try {
+            String message = "New ticket assigned: " + event.getTitle();
+            if (event.getAssignedUserId() != null) {
+                createSimpleNotification(
+                    "New Ticket Assigned",
+                    message,
+                    event.getAssignedUserId()
+                );
+            }
+        } catch (Exception e) {
+            log.error("Error processing ticket.created event: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "solution.approved", groupId = "${spring.kafka.consumer.group-id}")
+    public void consumeSolutionApprovedEvent(SolutionApprovedEvent event) {
+        log.info("Received solution.approved event for solution: {}", event.getSolutionId());
+        try {
+            String message = "Your solution was approved";
+            if (event.getContributorIds() != null) {
+                for (Long contributorId : event.getContributorIds()) {
+                    createSimpleNotification(
+                        "Solution Approved",
+                        message,
+                        contributorId
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error processing solution.approved event: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "reward.added", groupId = "${spring.kafka.consumer.group-id}")
+    public void consumeRewardAddedEvent(RewardAddedEvent event) {
+        log.info("Received reward.added event for user: {}", event.getUserId());
+        try {
+            String message = "You earned " + event.getPoints() + " points";
+            if (event.getUserId() != null) {
+                createSimpleNotification(
+                    "Points Earned",
+                    message,
+                    event.getUserId()
+                );
+            }
+        } catch (Exception e) {
+            log.error("Error processing reward.added event: {}", e.getMessage(), e);
+        }
+    }
+
+    private void createSimpleNotification(String title, String message, Long userId) {
+        try {
+            UUID userUuid = new UUID(0, userId);
+            CreateNotificationRequest request = CreateNotificationRequest.builder()
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.SYSTEM_ALERT)
+                    .recipientUserIds(Collections.singletonList(userUuid))
+                    .build();
+            NotificationResponse response = notificationService.createNotification(request);
+            notificationService.sendNotification(response.getNotificationId());
+            log.info("Created notification for user {}: {}", userId, title);
+        } catch (Exception e) {
+            log.error("Failed to create notification for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    @KafkaListener(topics = "ticket.created.legacy", groupId = "${spring.kafka.consumer.group-id}")
+    public void consumeTicketCreatedLegacy(NotificationEvent event) {
         processEvent(event, "TICKET_CREATED");
     }
 
