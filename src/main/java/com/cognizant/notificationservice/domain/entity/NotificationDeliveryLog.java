@@ -42,4 +42,8 @@ public class NotificationDeliveryLog {
 
     @Column(name = "error_message")
     private String errorMessage;
+
+    @Column(name = "retry_count")
+    @Builder.Default
+    private int retryCount = 0;
 }

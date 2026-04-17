@@ -9,44 +9,42 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/notifications/preferences")
+@RequestMapping("/api/preferences")
 @RequiredArgsConstructor
 @Tag(name = "Notification Preferences", description = "Notification preference management APIs")
 public class NotificationPreferenceController {
 
     private final NotificationPreferenceService preferenceService;
 
-    @GetMapping
-    @Operation(summary = "Get notification preferences for the authenticated user")
-    public ResponseEntity<NotificationPreferenceResponse> getPreferences(
-            @AuthenticationPrincipal String userId) {
-        NotificationPreferenceResponse response =
-                preferenceService.getPreferencesByUserId(UUID.fromString(userId));
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @Operation(summary = "Get notification preferences for a user")
+    public ResponseEntity<NotificationPreferenceResponse> getPreferences(@PathVariable UUID userId) {
+        NotificationPreferenceResponse response = preferenceService.getPreferencesByUserId(userId);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    @Operation(summary = "Create default notification preferences for the authenticated user")
-    public ResponseEntity<NotificationPreferenceResponse> createDefaultPreferences(
-            @AuthenticationPrincipal String userId) {
-        NotificationPreferenceResponse response =
-                preferenceService.createDefaultPreferences(UUID.fromString(userId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PatchMapping
-    @Operation(summary = "Update notification preferences for the authenticated user")
+    @PutMapping("/{userId}")
+    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @Operation(summary = "Update notification preferences for a user")
     public ResponseEntity<NotificationPreferenceResponse> updatePreferences(
-            @AuthenticationPrincipal String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody UpdatePreferenceRequest request) {
-        NotificationPreferenceResponse response =
-                preferenceService.updatePreferences(UUID.fromString(userId), request);
+        NotificationPreferenceResponse response = preferenceService.updatePreferences(userId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{userId}")
+    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @Operation(summary = "Create default notification preferences for a user")
+    public ResponseEntity<NotificationPreferenceResponse> createDefaultPreferences(@PathVariable UUID userId) {
+        NotificationPreferenceResponse response = preferenceService.createDefaultPreferences(userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

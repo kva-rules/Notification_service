@@ -26,4 +26,6 @@ public interface NotificationRecipientRepository extends JpaRepository<Notificat
     @Modifying
     @Query("UPDATE NotificationRecipient nr SET nr.read = true, nr.readAt = CURRENT_TIMESTAMP WHERE nr.userId = :userId AND nr.read = false")
     void markAllAsReadByUserId(@Param("userId") UUID userId);
+
+    long countByReadFalse();
 }
