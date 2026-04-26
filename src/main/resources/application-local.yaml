@@ -4,13 +4,11 @@ server:
 spring:
   application:
     name: notification-service
-
   datasource:
-    url: jdbc:postgresql://postgres-notification:5432/notification_db
+    url: jdbc:postgresql://localhost:5432/notification_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,72 +17,53 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: false
-
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     consumer:
       group-id: notification-service-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      # ErrorHandlingDeserializer prevents poison-pill records from entering an infinite
+      # retry loop (and chewing through disk space). Bad records are logged once and skipped.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
 
 kafka:
   topics:
     notification-events: notification-events
 
-spring.mail:
-  host: ${MAIL_HOST:smtp.gmail.com}
-  port: ${MAIL_PORT:587}
-  username: ${MAIL_USERNAME:}
-  password: ${MAIL_PASSWORD:}
-  properties:
-    mail:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
-
 app:
   email:
-    enabled: ${EMAIL_ENABLED:false}
+    enabled: false
+  jwt:
+    secret: myVerySecretKeyForJWTThatIsLongEnoughForHS512Signature
 
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-here-must-be-at-least-32-characters-long}
+  secret: myVerySecretKeyForJWTThatIsLongEnoughForHS512Signature
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when_authorized
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    try-it-out-enabled: true
-    display-request-duration: true
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:
     root: INFO
     com.cognizant.notificationservice: DEBUG
     org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
