@@ -54,7 +54,7 @@ public class NotificationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get notification by ID", description = "Fetch a single notification by its identifier")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Notification found"),
@@ -69,7 +69,7 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Mark notification as read", description = "Marks a single notification as read for a user")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Notification marked read"),
@@ -85,7 +85,7 @@ public class NotificationController {
     }
 
     @PutMapping("/users/{userId}/read-all")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Mark all notifications as read", description = "Marks every unread notification for the user")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "All notifications marked read"),
@@ -99,7 +99,7 @@ public class NotificationController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Delete a notification", description = "Remove the notification permanently")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Notification deleted"),
@@ -114,7 +114,7 @@ public class NotificationController {
     }
 
     @GetMapping("/users/{userId}/unread-count")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get unread notification count", description = "Number of unread notifications for the user")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Count returned"),

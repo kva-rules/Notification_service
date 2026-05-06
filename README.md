@@ -121,6 +121,24 @@ The Java `KafkaConfig.java` `consumerFactory()` bean overrides the YAML config. 
 `USE_TYPE_INFO_HEADERS = true`, and `VALUE_DEFAULT_TYPE = NotificationEvent.class.getName()`.
 Without `ErrorHandlingDeserializer`, a single malformed payload enters an infinite retry loop.
 
+**`reward.points.added` events not producing "Points Earned" notifications (May 2026 fix)**
+Root cause: the reward service publishes without type headers (`ADD_TYPE_INFO_HEADERS: false`). The default `kafkaListenerContainerFactory` uses `USE_TYPE_INFO_HEADERS: true` and falls back to `NotificationEvent`. Spring then tries to convert `NotificationEvent → RewardPointsAddedEvent` and fails.
+
+Fix applied: `KafkaConfig` now has a dedicated `rewardPointsContainerFactory` bean:
+- `USE_TYPE_INFO_HEADERS: false`
+- `VALUE_DEFAULT_TYPE: RewardPointsAddedEvent.class.getName()`
+
+`consumeRewardPointsAdded` in `NotificationEventConsumer` uses `containerFactory = "rewardPointsContainerFactory"` and accepts a typed `RewardPointsAddedEvent` parameter. The local DTO is in `application/dto/event/RewardPointsAddedEvent.java`.
+
+**`reference_id`/`reference_type` NOT NULL violation on Kafka-triggered notifications (May 2026 fix)**
+Root cause: `Notification.java` entity had `@Column(nullable = false)` on `referenceId` and `referenceType`, but the `createAndSend()` convenience helper does not set either field.
+
+Fix applied: removed `nullable = false` from both `@Column` annotations. Also applied to the live DB:
+```sql
+ALTER TABLE notifications ALTER COLUMN reference_id DROP NOT NULL;
+ALTER TABLE notifications ALTER COLUMN reference_type DROP NOT NULL;
+```
+
 **Events not reaching the service**
 Tail logs: `./services.sh logs notification-service`. Look for `"Consumed event type=…"`. If absent, verify Kafka container + consumer group:
 ```bash

@@ -24,7 +24,7 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
     private final NotificationPreferenceMapper preferenceMapper;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = NotificationPreferenceNotFoundException.class)
     public NotificationPreferenceResponse getPreferencesByUserId(UUID userId) {
         NotificationPreference preference = preferenceRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotificationPreferenceNotFoundException(userId));

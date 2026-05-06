@@ -41,7 +41,7 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = TemplateNotFoundException.class)
     public NotificationTemplateResponse getTemplateByEventType(String eventType) {
         NotificationTemplate template = templateRepository.findByEventType(eventType)
                 .orElseThrow(() -> new TemplateNotFoundException(eventType));

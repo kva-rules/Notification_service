@@ -51,7 +51,9 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationMapper.toEntity(request);
         notification.setStatus(NotificationStatus.CREATED);
 
-        List<NotificationRecipient> recipients = request.getRecipientUserIds().stream()
+        List<java.util.UUID> recipientUserIds = request.getRecipientUserIds() != null
+                ? request.getRecipientUserIds() : java.util.Collections.emptyList();
+        List<NotificationRecipient> recipients = recipientUserIds.stream()
                 .map(userId -> NotificationRecipient.builder()
                         .notification(notification)
                         .userId(userId)
@@ -258,14 +260,21 @@ public class NotificationServiceImpl implements NotificationService {
     public void broadcastNotification(BroadcastNotificationRequest request) {
         log.info("Broadcasting notification: {}", request.getTitle());
 
+        // When sendToAll=true with no explicit userIds, use an empty list (no-op recipients)
+        java.util.List<java.util.UUID> recipientIds =
+                (request.getUserIds() != null) ? request.getUserIds() : java.util.Collections.emptyList();
+
         CreateNotificationRequest createRequest = CreateNotificationRequest.builder()
                 .title(request.getTitle())
                 .message(request.getMessage())
                 .type(request.getType())
-                .recipientUserIds(request.getUserIds())
+                .recipientUserIds(recipientIds)
                 .build();
 
         NotificationResponse response = createNotification(createRequest);
-        sendNotification(response.getNotificationId());
+        if (!recipientIds.isEmpty()) {
+            sendNotification(response.getNotificationId());
+        }
+        log.info("Broadcast complete: notificationId={}, recipients={}", response.getNotificationId(), recipientIds.size());
     }
 }

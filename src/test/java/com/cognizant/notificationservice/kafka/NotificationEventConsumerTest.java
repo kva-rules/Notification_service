@@ -9,6 +9,7 @@ import com.cognizant.notificationservice.domain.enums.NotificationStatus;
 import com.cognizant.notificationservice.domain.enums.NotificationType;
 import com.cognizant.notificationservice.infrastructure.kafka.NotificationEventConsumer;
 import com.cognizant.notificationservice.infrastructure.kafka.NotificationEventProducer;
+import com.library.common.event.TicketCreatedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,16 +78,20 @@ class NotificationEventConsumerTest {
     @Test
     @DisplayName("Should process ticket created event successfully")
     void consumeTicketCreated_Success() {
-        when(templateService.getTemplateByEventType("TICKET_CREATED")).thenReturn(templateResponse);
+        UUID assignedUserId = UUID.randomUUID();
+        TicketCreatedEvent ticketCreatedEvent = TicketCreatedEvent.builder()
+                .ticketId(1L)
+                .title("Test Ticket")
+                .assignedUserId(assignedUserId.getMostSignificantBits())
+                .build();
+
         when(notificationService.createNotification(any())).thenReturn(notificationResponse);
         doNothing().when(notificationService).sendNotification(any());
-        doNothing().when(eventProducer).publishNotificationSent(any());
 
-        eventConsumer.consumeTicketCreated(event);
+        eventConsumer.consumeTicketCreated(ticketCreatedEvent);
 
         verify(notificationService).createNotification(any());
         verify(notificationService).sendNotification(notificationResponse.getNotificationId());
-        verify(eventProducer).publishNotificationSent(notificationResponse.getNotificationId());
     }
 
     @Test
@@ -130,13 +137,13 @@ class NotificationEventConsumerTest {
     }
 
     @Test
-    @DisplayName("Should publish failed event on error")
-    void consumeTicketCreated_Error_PublishFailed() {
+    @DisplayName("Should publish failed event on error (legacy topic)")
+    void consumeTicketCreatedLegacy_Error_PublishFailed() {
         when(templateService.getTemplateByEventType("TICKET_CREATED")).thenReturn(templateResponse);
         when(notificationService.createNotification(any())).thenThrow(new RuntimeException("Database error"));
         doNothing().when(eventProducer).publishNotificationFailed(any(), anyString());
 
-        eventConsumer.consumeTicketCreated(event);
+        eventConsumer.consumeTicketCreatedLegacy(event);
 
         verify(eventProducer).publishNotificationFailed(eq(event), anyString());
     }

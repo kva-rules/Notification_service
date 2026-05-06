@@ -35,10 +35,10 @@ public class Notification {
     @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "reference_id", nullable = false)
+    @Column(name = "reference_id")
     private UUID referenceId;
 
-    @Column(name = "reference_type", nullable = false)
+    @Column(name = "reference_type")
     private String referenceType;
 
     @CreationTimestamp
