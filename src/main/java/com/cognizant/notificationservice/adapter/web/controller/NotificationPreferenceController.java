@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/preferences")
+@RequestMapping("/api/notification-preferences")
 @RequiredArgsConstructor
 @Tag(name = "Notification Preferences", description = "Per-user channel preferences")
 public class NotificationPreferenceController {
@@ -27,7 +27,7 @@ public class NotificationPreferenceController {
     private final NotificationPreferenceService preferenceService;
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get user notification preferences", description = "Fetch stored channel prefs for a user")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Preferences returned"),
@@ -42,7 +42,7 @@ public class NotificationPreferenceController {
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Update user notification preferences", description = "Modify channel preferences for a user")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Preferences updated"),
@@ -59,7 +59,7 @@ public class NotificationPreferenceController {
     }
 
     @PostMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ENGINEER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ENGINEER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Create default preferences", description = "Initialize default channel prefs for a user")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Default preferences created"),

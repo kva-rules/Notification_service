@@ -60,9 +60,9 @@ Multi-channel notification microservice. Consumes domain events from Kafka (`tic
 ### Preferences (`/api/notification-preferences/**`)
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/api/notification-preferences` | JWT | Current user's preferences |
-| PUT | `/api/notification-preferences` | JWT | Update own preferences |
-| POST | `/api/notification-preferences/reset` | JWT | Reset to defaults |
+| GET | `/api/notification-preferences/{userId}` | JWT | Get preferences for a user |
+| PUT | `/api/notification-preferences/{userId}` | JWT | Update preferences for a user |
+| POST | `/api/notification-preferences/{userId}` | JWT | Create default preferences for a user |
 
 ### Internal (`/internal/**`) — service-to-service
 | Method | Path | Purpose |
@@ -148,6 +148,25 @@ docker exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 \
 
 **Email dispatch hangs**
 With `app.email.enabled=true` and invalid SMTP creds, the dispatcher will block until timeout. Either set valid creds or disable email.
+
+---
+
+## Kubernetes
+- Manifest: `k8s/notification-service.yaml` (part of `k8s/services.yaml`)
+- Namespace: `ticketing-system`
+- Service DNS (intra-cluster): `notification-service:8087`
+- Access via ingress: `http://ticketing.local/api/notifications/**`
+
+```bash
+# View logs (shows consumed Kafka events and dispatched notifications)
+./services.sh k8s-logs notification-service
+# or: kubectl logs -n ticketing-system deployment/notification-service -f
+
+# Restart the pod
+kubectl rollout restart deployment/notification-service -n ticketing-system
+```
+
+> Email (`app.email.enabled`) is `false` by default in k8s mode — in-app notifications work, SMTP dispatch is a no-op.
 
 ---
 
